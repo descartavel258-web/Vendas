@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zuri Pocket — Painel</title>
+<meta name="theme-color" content="#0a1f3d">
+<style>
+  :root{
+    --bg: #0a1f3d;
+    --panel: #0f2a52;
+    --line: #1c3a63;
+    --accent: #4a9eff;
+    --text: #f2f5fa;
+    --muted: #8ba3c7;
+    --ok: #4ade80;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; min-height:100%;
+    background: var(--bg);
+    font-family: -apple-system, 'Segoe UI', system-ui, sans-serif;
+    color: var(--text);
+  }
+  .wrap{ max-width: 480px; margin: 0 auto; padding: 28px 18px 90px; }
+
+  .topbar{ display:flex; align-items:center; gap: 12px; margin-bottom: 28px; }
+  .topbar .logo{
+    width: 38px; height:38px; border-radius: 50%; background: var(--accent);
+    display:flex; align-items:center; justify-content:center; font-weight:800; font-size:18px; color:#0a1f3d;
+  }
+  .topbar .name{ font-weight: 700; font-size: 16px; }
+  .topbar .tag{ font-size: 11px; color: var(--muted); }
+
+  h1{ font-size: 22px; margin: 0 0 4px; font-weight: 700; }
+  .sub{ color: var(--muted); margin-bottom: 24px; font-size: 13.5px; line-height:1.5; }
+
+  .status{
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 16px 18px; margin-bottom: 16px; display:flex; justify-content:space-between; align-items:center;
+  }
+  .status .label{ color: var(--muted); font-size: 12px; }
+  .status .value{ font-size: 14px; font-weight: 700; }
+  .value.ok{ color: var(--ok); }
+  .value.off{ color: #f87171; }
+
+  .stats{ display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .card{ background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+  .card .label{ color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+  .card .value{ font-size: 20px; font-weight: 700; }
+  .card .value.total{ color: var(--accent); }
+
+  button{
+    font-family: inherit; cursor:pointer; border:none; border-radius: 10px;
+    padding: 14px 16px; font-size: 14.5px; font-weight: 700; width:100%;
+  }
+  .btn-primary{ background: var(--accent); color: #06182f; margin-bottom:10px; }
+  .btn-primary:disabled{ background:#26364d; color:var(--muted); cursor:not-allowed; }
+  .btn-ghost{ background: transparent; color: var(--muted); border: 1px solid var(--line); }
+
+  .orders{ background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow:hidden; margin-top:16px; }
+  .orders .head{ padding: 12px 18px; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); border-bottom: 1px solid var(--line); }
+  .order-item{ display:flex; justify-content:space-between; align-items:center; padding: 13px 18px; border-bottom: 1px solid #142c50; font-size: 13.5px; }
+  .order-item:last-child{ border-bottom:none; }
+  .order-item .who .id{ display:block; font-size:11px; color:var(--muted); margin-top:2px; }
+  .order-item .amt{ color: var(--accent); font-weight: 700; }
+  .empty{ padding: 24px 18px; color: var(--muted); font-size: 13px; text-align:center; }
+
+  .next-in{ font-size: 11.5px; color: var(--muted); text-align:center; margin-top: 12px; }
+
+  .steps{
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 16px 18px; margin-top: 18px; font-size: 12.5px; color: var(--muted); line-height: 1.7;
+  }
+  .steps b{ color: var(--text); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="logo">Z</div>
+    <div>
+      <div class="name">Zuri Pocket</div>
+      <div class="tag">Painel de comissões</div>
+    </div>
+  </div>
+
+  <h1>Vendas em tempo real</h1>
+  <div class="sub">Ative as notificações abaixo para receber alertas direto na sua central de notificações.</div>
+
+  <div class="status">
+    <div class="label">Status</div>
+    <div class="value off" id="status-text">Desativado</div>
+  </div>
+
+  <button class="btn-primary" id="btn-enable">Ativar notificações</button>
+  <button class="btn-ghost" id="btn-force">Simular nova venda</button>
+
+  <div class="stats">
+    <div class="card"><div class="label">Vendas hoje</div><div class="value" id="stat-count">0</div></div>
+    <div class="card"><div class="label">Comissão hoje</div><div class="value total" id="stat-total">0,00 MT</div></div>
+  </div>
+
+  <div class="next-in" id="next-in"></div>
+
+  <div class="orders">
+    <div class="head">Últimas vendas</div>
+    <div id="order-list"><div class="empty">Nenhuma venda ainda.</div></div>
+  </div>
+
+  <div class="steps">
+    <b>Pra funcionar direito:</b><br>
+    1. Toque em "Ativar notificações" e permita quando o Android pedir.<br>
+    2. Deixe o Chrome aberto em segundo plano (não force o fechamento pelos "recentes").<br>
+    3. Uma nova venda chega a cada 4 minutos.
+  </div>
+</div>
+
+<script>
+  const INTERVAL_MS = 4 * 60 * 1000;
+  let countdown = INTERVAL_MS / 1000;
+  let salesCount = 0;
+  let salesTotal = 0;
+  let notifReady = false;
+
+  function randomValue(){
+    const bases = [850, 900, 970, 1050, 1120, 1240, 1390, 1500, 1670, 1820];
+    const cents = [0, 0, 0, 50, 25, 75];
+    return bases[Math.floor(Math.random()*bases.length)] + cents[Math.floor(Math.random()*cents.length)]/100;
+  }
+  function formatMT(v){
+    return v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' MT';
+  }
+
+  function addOrderRow(valor, time){
+    const list = document.getElementById('order-list');
+    const empty = list.querySelector('.empty');
+    if(empty) empty.remove();
+    const item = document.createElement('div');
+    item.className = 'order-item';
+    item.innerHTML = `
+      <div class="who">Venda realizada
+        <span class="id">${time}</span>
+      </div>
+      <div class="amt">${formatMT(valor)}</div>
+    `;
+    list.insertBefore(item, list.firstChild);
+    while(list.children.length > 8){ list.removeChild(list.lastChild); }
+  }
+
+  function fireOrder(){
+    const valor = randomValue();
+    const time = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+
+    salesCount++;
+    salesTotal += valor;
+    document.getElementById('stat-count').textContent = salesCount;
+    document.getElementById('stat-total').textContent = formatMT(salesTotal);
+    addOrderRow(valor, time);
+
+    if(notifReady){
+      new Notification("Zuri Pocket", {
+        body: `Venda realizada\nSua comissão: ${formatMT(valor)}`,
+        tag: "venda-" + Date.now(),
+        vibrate: [80, 40, 80]
+      });
+    }
+  }
+
+  document.getElementById('btn-enable').addEventListener('click', async () => {
+    if(!('Notification' in window)){ alert('Seu navegador não suporta notificações.'); return; }
+    const perm = await Notification.requestPermission();
+    if(perm !== 'granted'){ alert('Você precisa permitir as notificações.'); return; }
+    notifReady = true;
+    document.getElementById('status-text').textContent = 'Ativado';
+    document.getElementById('status-text').className = 'value ok';
+    document.getElementById('btn-enable').textContent = 'Ativo ✓';
+    document.getElementById('btn-enable').disabled = true;
+    startTimer();
+  });
+
+  document.getElementById('btn-force').addEventListener('click', () => {
+    if(!notifReady){ alert('Ative as notificações primeiro.'); return; }
+    fireOrder();
+    countdown = INTERVAL_MS/1000;
+  });
+
+  function startTimer(){
+    setInterval(() => {
+      countdown--;
+      const m = Math.floor(countdown/60).toString().padStart(2,'0');
+      const s = (countdown%60).toString().padStart(2,'0');
+      document.getElementById('next-in').textContent = `Próxima venda em ${m}:${s}`;
+      if(countdown <= 0){ fireOrder(); countdown = INTERVAL_MS/1000; }
+    }, 1000);
+  }
+</script>
+</body>
+</html>
