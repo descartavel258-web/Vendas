@@ -92,6 +92,10 @@ body{background:#0A0A0A;color:#E5E7EB;font-family:'Sora',sans-serif;font-size:14
 .btn-approve:hover{background:#10B981;color:#000}
 .btn-reject{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#EF4444;border-radius:10px;padding:9px;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;transition:all .2s;width:100%}
 .btn-reject:hover{background:#EF4444;color:#fff}
+.btn-delete{background:rgba(107,114,128,.12);border:1px solid rgba(107,114,128,.35);color:#9CA3AF;border-radius:10px;padding:9px;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;transition:all .2s;width:100%}
+.btn-delete:hover{background:#374151;color:#FCA5A5;border-color:#EF4444}
+.adcard-btns-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
+.adcard-btns-1{display:grid;grid-template-columns:1fr;gap:8px;margin-top:10px}
 .empty{text-align:center;padding:50px 20px;color:#4B5563;font-size:13px}
 .toast-wrap{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:999;pointer-events:none}
 .toast{background:#1F2937;border:1px solid #374151;border-radius:50px;padding:11px 22px;font-size:13px;font-weight:700;color:#E5E7EB;margin-bottom:8px;white-space:nowrap}
@@ -299,10 +303,14 @@ function renderContent() {
           </div>
         </div>
         ${d.status==='pending'?`
-        <div class="adcard-btns">
+        <div class="adcard-btns-3">
           <button class="btn-approve" onclick="appDep('${d.id}')">✓ Aprovar</button>
           <button class="btn-reject" onclick="rejDep('${d.id}')">✗ Rejeitar</button>
-        </div>`:''}
+          <button class="btn-delete" onclick="delDep('${d.id}')">🗑 Apagar</button>
+        </div>`:`
+        <div class="adcard-btns-1">
+          <button class="btn-delete" onclick="delDep('${d.id}')">🗑 Apagar</button>
+        </div>`}
       </div>
     `).join('');
 
@@ -326,11 +334,15 @@ function renderContent() {
           </div>
         </div>
         ${w.status==='pending'?`
-        <div class="adcard-btns">
-          <button class="btn-approve" onclick="appWth('${w.id}')">✓ Aprovar + Enviar</button>
+        <div class="adcard-btns-3">
+          <button class="btn-approve" onclick="appWth('${w.id}')">✓ Aprovar</button>
           <button class="btn-reject" onclick="rejWth('${w.id}')">✗ Rejeitar</button>
+          <button class="btn-delete" onclick="delWth('${w.id}')">🗑 Apagar</button>
         </div>
-        <div class="wth-note">📲 Enviar <strong>${fmt(w.amount)} MT</strong> para +258 <strong>${w.toPhone||'—'}</strong> via <strong>${(w.method||'').toUpperCase()}</strong></div>`:''}
+        <div class="wth-note">📲 Enviar <strong>${fmt(w.amount)} MT</strong> para +258 <strong>${w.toPhone||'—'}</strong> via <strong>${(w.method||'').toUpperCase()}</strong></div>`:`
+        <div class="adcard-btns-1">
+          <button class="btn-delete" onclick="delWth('${w.id}')">🗑 Apagar</button>
+        </div>`}
       </div>
     `).join('');
 
@@ -354,6 +366,9 @@ function renderContent() {
             <div style="font-size:10px;color:#6B7280;margin-top:4px">${canWithdraw?'<span style="color:#10B981">✅ Pode sacar</span>':lv&&depBase?`<span style="color:#F59E0B">⏳ ${daysLeft}d</span>`:'—'}</div>
           </div>
         </div>
+        <div class="adcard-btns-1">
+          <button class="btn-delete" onclick="delUser('${u.id}')">🗑 Apagar Utilizador</button>
+        </div>
       </div>`;
     }).join('');
 
@@ -371,9 +386,10 @@ function renderContent() {
           </div>
           <span class="badge bp">🆕 Novo</span>
         </div>
-        <div class="adcard-btns">
+        <div class="adcard-btns-3">
           <button class="btn-approve" onclick="appDep('${d.id}')">✓ Aprovar</button>
           <button class="btn-reject" onclick="rejDep('${d.id}')">✗ Rejeitar</button>
+          <button class="btn-delete" onclick="delDep('${d.id}')">🗑 Apagar</button>
         </div>
       </div>
     `).join('');
@@ -467,6 +483,53 @@ async function rejWth(id) {
   }
   await loadData(); adStats(); renderContent();
   toast('Saque rejeitado — utilizador pode pedir de novo','err');
+}
+
+// ══ APAGAR ══
+async function delDep(id) {
+  if(!confirm('Apagar este depósito permanentemente?')) return;
+  await loadData();
+  const d = STATE.deposits.find(d=>d.id==id);
+  if(!d) return toast('Depósito não encontrado','err');
+  await setFB('deposits/'+d.id, null);
+  await loadData(); adStats(); renderContent();
+  toast('Depósito apagado','ok');
+}
+
+async function delWth(id) {
+  if(!confirm('Apagar este saque permanentemente?')) return;
+  await loadData();
+  const w = STATE.withdrawals.find(w=>w.id==id);
+  if(!w) return toast('Saque não encontrado','err');
+  // Se estava pendente, libertar o utilizador
+  if(w.status==='pending') {
+    const u = STATE.users.find(u=>u.id===w.userId);
+    if(u) await updFB('users/'+u.id, {withdrawCount:0});
+  }
+  await setFB('withdrawals/'+w.id, null);
+  await loadData(); adStats(); renderContent();
+  toast('Saque apagado','ok');
+}
+
+async function delUser(id) {
+  if(!confirm('Apagar este utilizador e todos os seus depósitos/saques? Esta acção não pode ser desfeita.')) return;
+  await loadData();
+  const u = STATE.users.find(u=>u.id==id);
+  if(!u) return toast('Utilizador não encontrado','err');
+  // Apagar depósitos do user
+  const userDeps = STATE.deposits.filter(d=>d.userId==id);
+  for(const d of userDeps) {
+    await setFB('deposits/'+d.id, null);
+  }
+  // Apagar saques do user
+  const userWths = STATE.withdrawals.filter(w=>w.userId==id);
+  for(const w of userWths) {
+    await setFB('withdrawals/'+w.id, null);
+  }
+  // Apagar o user
+  await setFB('users/'+u.id, null);
+  await loadData(); adStats(); renderContent();
+  toast('Utilizador e dados associados apagados','ok');
 }
 
 function fmt(n){ return Number(n||0).toLocaleString('pt'); }
