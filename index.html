@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0D0D0D">
+<title>Admin — LUCRO PRIME</title>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getDatabase, ref, onValue, set, update, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+  const firebaseConfig = {
+    apiKey: "AIzaSyAr_naF8pZIumtpzDyU43sw9dzwvegWts0",
+    authDomain: "xitiquemz-e295c.firebaseapp.com",
+    databaseURL: "https://xitiquemz-e295c-default-rtdb.firebaseio.com",
+    projectId: "xitiquemz-e295c",
+    storageBucket: "xitiquemz-e295c.firebasestorage.app",
+    messagingSenderId: "822220496963",
+    appId: "1:822220496963:web:c3a7ded7143c25d51974f6"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  window.firebaseDB = db;
+  window.firebaseRef = ref;
+  window.firebaseOnValue = onValue;
+  window.firebaseSet = set;
+  window.firebaseUpdate = update;
+  window.firebaseGet = get;
+  window.firebaseChild = child;
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0A0A0A;color:#E5E7EB;font-family:'Sora',sans-serif;font-size:14px;min-height:100vh}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:#333;border-radius:4px}
+.hidden{display:none!important}
+
+/* LOGIN */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;background:linear-gradient(135deg,#0D0D0D,#111827)}
+.login-box{background:#111;border:1px solid #222;border-radius:20px;padding:32px;width:100%;max-width:360px}
+.login-logo{text-align:center;margin-bottom:28px}
+.login-logo h1{font-size:22px;font-weight:800;color:#10B981;letter-spacing:-.5px}
+.login-logo p{font-size:12px;color:#6B7280;margin-top:4px}
+.login-badge{display:inline-block;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:#10B981;border-radius:20px;padding:4px 14px;font-size:11px;font-weight:700;margin-bottom:16px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;font-weight:700;color:#9CA3AF;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em}
+.field input{width:100%;background:#0D0D0D;border:1.5px solid #222;color:#E5E7EB;border-radius:12px;padding:13px 16px;font-family:inherit;font-size:14px;outline:none;transition:border-color .2s}
+.field input:focus{border-color:#10B981}
+.btn-login{width:100%;padding:14px;background:linear-gradient(135deg,#059669,#10B981);border:none;border-radius:12px;color:#fff;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;transition:all .2s}
+.btn-login:hover{opacity:.9;transform:translateY(-1px)}
+
+
+
+/* ADMIN */
+#admin-screen{display:none;min-height:100vh}
+.adh{background:linear-gradient(135deg,#111,#1F2937);border-bottom:1px solid #222;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.adh-left h1{font-size:18px;font-weight:800;color:#10B981}
+.adh-left p{font-size:11px;color:#6B7280;margin-top:2px}
+.adh-right{display:flex;align-items:center;gap:10px}
+.live-dot{width:8px;height:8px;background:#10B981;border-radius:50%;animation:pulse 1.5s infinite}
+.live-txt{font-size:11px;color:#10B981;font-weight:700}
+.btn-logout{background:#1F2937;border:1px solid #374151;color:#9CA3AF;border-radius:8px;padding:7px 14px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.btn-logout:hover{color:#EF4444;border-color:#EF4444}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:16px}
+@media(min-width:600px){.stats-grid{grid-template-columns:repeat(4,1fr)}}
+.stat-card{background:#111;border:1px solid #1F2937;border-radius:14px;padding:14px}
+.stat-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:10px}
+.stat-v{font-size:22px;font-weight:800;color:#E5E7EB}
+.stat-l{font-size:10px;color:#6B7280;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-top:3px}
+
+/* TABS */
+.tabs{display:flex;gap:6px;padding:0 16px 12px;overflow-x:auto}
+.tab{background:#111;border:1px solid #1F2937;color:#9CA3AF;border-radius:20px;padding:8px 16px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s}
+.tab.active{background:#10B981;border-color:#10B981;color:#000}
+
+/* CONTENT */
+.content{padding:0 16px 40px}
+.adcard{background:#111;border:1px solid #1F2937;border-radius:14px;padding:14px;margin-bottom:10px}
+.adcard-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.adcard-name{font-size:14px;font-weight:700;color:#E5E7EB}
+.adcard-sub{font-size:11px;color:#6B7280;margin-top:3px;line-height:1.6}
+.adcard-amt{font-size:18px;font-weight:800;color:#F59E0B}
+.badge{border-radius:20px;padding:3px 10px;font-size:10px;font-weight:800;display:inline-block}
+.bp{background:rgba(245,158,11,.15);color:#F59E0B}
+.ba{background:rgba(16,185,129,.15);color:#10B981}
+.br{background:rgba(239,68,68,.15);color:#EF4444}
+.adcard-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.btn-approve{background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.3);color:#10B981;border-radius:10px;padding:9px;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;transition:all .2s;width:100%}
+.btn-approve:hover{background:#10B981;color:#000}
+.btn-reject{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#EF4444;border-radius:10px;padding:9px;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;transition:all .2s;width:100%}
+.btn-reject:hover{background:#EF4444;color:#fff}
+.empty{text-align:center;padding:50px 20px;color:#4B5563;font-size:13px}
+.toast-wrap{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:999;pointer-events:none}
+.toast{background:#1F2937;border:1px solid #374151;border-radius:50px;padding:11px 22px;font-size:13px;font-weight:700;color:#E5E7EB;margin-bottom:8px;white-space:nowrap}
+.toast.ok{background:#065F46;border-color:#10B981;color:#A7F3D0}
+.toast.err{background:#7F1D1D;border-color:#EF4444;color:#FCA5A5}
+@keyframes fade{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.toast{animation:fade .3s ease}
+.wth-note{background:#111;border:1px solid #1F2937;border-radius:10px;padding:12px;margin-top:8px;font-size:11px;color:#9CA3AF;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="toast-wrap" id="tc"></div>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <h1>LUCRO PRIME</h1>
+      <p>Painel de Administração</p>
+    </div>
+    <div style="text-align:center;margin-bottom:20px">
+      <span class="login-badge">🔐 ACESSO RESTRITO</span>
+    </div>
+    <div class="field">
+      <label>Senha de Admin</label>
+      <input type="password" id="adm-pw" placeholder="••••••••" onkeydown="if(event.key==='Enter')doAdminLogin()">
+    </div>
+    <button class="btn-login" onclick="doAdminLogin()">Entrar como Admin</button>
+    
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="admin-screen">
+  <div class="adh">
+    <div class="adh-left">
+      <h1>⚡ Admin LUCRO PRIME</h1>
+      <p id="ad-time">A carregar...</p>
+    </div>
+    <div class="adh-right">
+      <div class="live-dot"></div>
+      <span class="live-txt">LIVE</span>
+      <button class="btn-logout" onclick="doLogout()">Sair</button>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(59,130,246,.15)">👥</div>
+      <div class="stat-v" id="ad-users">0</div>
+      <div class="stat-l">Utilizadores</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(245,158,11,.15)">💰</div>
+      <div class="stat-v" id="ad-pdep" style="color:#F59E0B">0</div>
+      <div class="stat-l">Dep. Pendentes</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(239,68,68,.15)">💸</div>
+      <div class="stat-v" id="ad-pwth" style="color:#EF4444">0</div>
+      <div class="stat-l">Saques Pend.</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(16,185,129,.15)">📊</div>
+      <div class="stat-v" id="ad-vol" style="color:#10B981;font-size:16px">0</div>
+      <div class="stat-l">Volume Total</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="adTab('deps')">💰 Depósitos</button>
+    <button class="tab" onclick="adTab('wths')">💸 Saques</button>
+    <button class="tab" onclick="adTab('users')">👥 Utilizadores</button>
+    <button class="tab" onclick="adTab('new')">🆕 Novas Adesões</button>
+  </div>
+
+  <div class="content" id="ad-content">
+    <div class="empty">A carregar dados...</div>
+  </div>
+</div>
+
+<script>
+const ADMIN_PW = 'admin2024';
+const REFERRAL_BONUS = 50;
+const LEVELS = [
+  {id:1,name:'VIP 1',deposit:350,  daily:70,   totalProfit:490,  durationDays:7},
+  {id:2,name:'VIP 2',deposit:750,  daily:150,  totalProfit:1200, durationDays:8},
+  {id:3,name:'VIP 3',deposit:1500, daily:300,  totalProfit:3600, durationDays:12},
+  {id:4,name:'VIP 4',deposit:3000, daily:600,  totalProfit:9600, durationDays:16},
+  {id:5,name:'VIP 5',deposit:6000, daily:1200, totalProfit:24000,durationDays:20},
+  {id:6,name:'VIP 6',deposit:10000,daily:2000, totalProfit:48000,durationDays:24}
+];
+
+let STATE = { users:[], deposits:[], withdrawals:[] };
+let currentTab = 'deps';
+
+// ══ TOAST ══
+function toast(msg, type='') {
+  const c = document.getElementById('tc');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.style.opacity = '0', 2800);
+  setTimeout(() => t.remove(), 3200);
+}
+
+// ══ FIREBASE ══
+async function loadData() {
+  try {
+    const db=window.firebaseDB, ref=window.firebaseRef, get=window.firebaseGet, child=window.firebaseChild;
+    const [uS,dS,wS] = await Promise.all([
+      get(child(ref(db),'users')),
+      get(child(ref(db),'deposits')),
+      get(child(ref(db),'withdrawals'))
+    ]);
+    STATE.users = uS.exists() ? Object.values(uS.val()) : [];
+    STATE.deposits = dS.exists() ? Object.values(dS.val()) : [];
+    STATE.withdrawals = wS.exists() ? Object.values(wS.val()) : [];
+    return true;
+  } catch(e) { toast('Erro Firebase: ' + e.message, 'err'); return false; }
+}
+
+async function setFB(path, data) {
+  await window.firebaseSet(window.firebaseRef(window.firebaseDB, path), data);
+}
+async function updFB(path, data) {
+  await window.firebaseUpdate(window.firebaseRef(window.firebaseDB, path), data);
+}
+
+function setupListeners() {
+  const db=window.firebaseDB, ref=window.firebaseRef, onValue=window.firebaseOnValue;
+  onValue(ref(db,'users'), s => { if(s.exists()){ STATE.users=Object.values(s.val()); adStats(); renderContent(); } });
+  onValue(ref(db,'deposits'), s => { if(s.exists()){ STATE.deposits=Object.values(s.val()); adStats(); renderContent(); } });
+  onValue(ref(db,'withdrawals'), s => { if(s.exists()){ STATE.withdrawals=Object.values(s.val()); adStats(); renderContent(); } });
+}
+
+// ══ AUTH ══
+function doAdminLogin() {
+  const pw = document.getElementById('adm-pw').value;
+  if(pw !== ADMIN_PW) return toast('Senha incorrecta', 'err');
+  sessionStorage.setItem('adm_ok', '1');
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('admin-screen').style.display = 'block';
+  init();
+}
+
+function doLogout() {
+  sessionStorage.removeItem('adm_ok');
+  window.location.reload();
+}
+
+async function init() {
+  // Update time
+  setInterval(() => {
+    const el = document.getElementById('ad-time');
+    if(el) el.textContent = new Date().toLocaleString('pt');
+  }, 1000);
+  await loadData();
+  setupListeners();
+  adStats();
+  renderContent();
+}
+
+// ══ STATS ══
+function adStats() {
+  document.getElementById('ad-users').textContent = STATE.users.length;
+  document.getElementById('ad-pdep').textContent = STATE.deposits.filter(d=>d.status==='pending'&&!d.isReward&&!d.isRef).length;
+  document.getElementById('ad-pwth').textContent = STATE.withdrawals.filter(w=>w.status==='pending').length;
+  const vol = STATE.deposits.filter(d=>d.status==='approved'&&!d.isReward&&!d.isRef).reduce((s,d)=>s+(d.amount||0),0);
+  document.getElementById('ad-vol').textContent = fmt(vol)+' MT';
+}
+
+// ══ TABS ══
+function adTab(t) {
+  currentTab = t;
+  document.querySelectorAll('.tab').forEach((el,i) => el.classList.toggle('active', ['deps','wths','users','new'][i]===t));
+  renderContent();
+}
+
+// ══ RENDER ══
+function renderContent() {
+  const el = document.getElementById('ad-content');
+  if(!el) return;
+
+  if(currentTab === 'deps') {
+    const deps = STATE.deposits.filter(d=>!d.isReward&&!d.isRef).sort((a,b)=>b.date-a.date);
+    if(!deps.length){el.innerHTML='<div class="empty">Sem depósitos ainda</div>';return;}
+    el.innerHTML = deps.map(d=>`
+      <div class="adcard">
+        <div class="adcard-top">
+          <div>
+            <div class="adcard-name">${d.userName||'—'}</div>
+            <div class="adcard-sub">📱 +258 ${d.userPhone||'—'}</div>
+            <div class="adcard-sub">📦 ${d.levelName||'—'} · 💳 ${(d.method||'').toUpperCase()}</div>
+            <div class="adcard-sub">🔢 De: +258 ${d.fromPhone||'—'}</div>
+            <div class="adcard-sub">🔑 Ref: ${d.ref||'—'}</div>
+            <div class="adcard-sub">🕐 ${new Date(d.date).toLocaleString('pt')}</div>
+          </div>
+          <div style="text-align:right">
+            <div class="adcard-amt">${fmt(d.amount)} MT</div>
+            <span class="badge ${d.status==='pending'?'bp':d.status==='approved'?'ba':'br'}" style="margin-top:6px;display:block">
+              ${d.status==='pending'?'Pendente':d.status==='approved'?'Aprovado':'Rejeitado'}
+            </span>
+          </div>
+        </div>
+        ${d.status==='pending'?`
+        <div class="adcard-btns">
+          <button class="btn-approve" onclick="appDep('${d.id}')">✓ Aprovar</button>
+          <button class="btn-reject" onclick="rejDep('${d.id}')">✗ Rejeitar</button>
+        </div>`:''}
+      </div>
+    `).join('');
+
+  } else if(currentTab === 'wths') {
+    const wths = STATE.withdrawals.sort((a,b)=>b.date-a.date);
+    if(!wths.length){el.innerHTML='<div class="empty">Sem saques ainda</div>';return;}
+    el.innerHTML = wths.map(w=>`
+      <div class="adcard">
+        <div class="adcard-top">
+          <div>
+            <div class="adcard-name">${w.userName||'—'}</div>
+            <div class="adcard-sub">📱 +258 ${w.userPhone||'—'}</div>
+            <div class="adcard-sub">💳 ${(w.method||'').toUpperCase()} · Para: +258 ${w.toPhone||'—'}</div>
+            <div class="adcard-sub">🕐 ${new Date(w.date).toLocaleString('pt')}</div>
+          </div>
+          <div style="text-align:right">
+            <div class="adcard-amt">${fmt(w.amount)} MT</div>
+            <span class="badge ${w.status==='pending'?'bp':w.status==='approved'?'ba':'br'}" style="margin-top:6px;display:block">
+              ${w.status==='pending'?'Pendente':w.status==='approved'?'Aprovado':'Rejeitado'}
+            </span>
+          </div>
+        </div>
+        ${w.status==='pending'?`
+        <div class="adcard-btns">
+          <button class="btn-approve" onclick="appWth('${w.id}')">✓ Aprovar + Enviar</button>
+          <button class="btn-reject" onclick="rejWth('${w.id}')">✗ Rejeitar</button>
+        </div>
+        <div class="wth-note">📲 Enviar <strong>${fmt(w.amount)} MT</strong> para +258 <strong>${w.toPhone||'—'}</strong> via <strong>${(w.method||'').toUpperCase()}</strong></div>`:''}
+      </div>
+    `).join('');
+
+  } else if(currentTab === 'users') {
+    if(!STATE.users.length){el.innerHTML='<div class="empty">Sem utilizadores</div>';return;}
+    el.innerHTML = STATE.users.sort((a,b)=>b.joinTs-a.joinTs).map(u=>{
+      const lv = LEVELS.find(l=>l.id==u.level);
+      const depBase = STATE.deposits.filter(d=>d.userId===u.id&&d.status==='approved'&&!d.isReward&&!d.isRef).sort((a,b)=>a.date-b.date)[0];
+      const daysLeft = depBase&&lv ? Math.max(0,Math.ceil(((depBase.approvedAt+(lv.durationDays*86400000))-Date.now())/86400000)) : null;
+      const canWithdraw = daysLeft===0 && (u.withdrawCount||0)<1;
+      return `<div class="adcard">
+        <div class="adcard-top">
+          <div>
+            <div class="adcard-name">${u.name}</div>
+            <div class="adcard-sub">📱 +258 ${u.phone} · 🔑 ${u.code||'—'}</div>
+            <div class="adcard-sub">⭐ ${lv?lv.name:'Sem VIP'} · 👥 ${u.refs||0} refs · 💸 ${u.withdrawCount||0}/1 saque</div>
+            <div class="adcard-sub">📅 Entrou: ${u.joinDate||'—'}${daysLeft!==null?' · '+daysLeft+'d restantes':''}</div>
+          </div>
+          <div style="text-align:right">
+            <div class="adcard-amt">${fmt(u.balance)} MT</div>
+            <div style="font-size:10px;color:#6B7280;margin-top:4px">${canWithdraw?'<span style="color:#10B981">✅ Pode sacar</span>':lv&&depBase?`<span style="color:#F59E0B">⏳ ${daysLeft}d</span>`:'—'}</div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+
+  } else {
+    // Novas adesões = depósitos pendentes
+    const news = STATE.deposits.filter(d=>d.status==='pending'&&!d.isReward&&!d.isRef).sort((a,b)=>b.date-a.date);
+    if(!news.length){el.innerHTML='<div class="empty">Sem novas adesões pendentes</div>';return;}
+    el.innerHTML = news.map(d=>`
+      <div class="adcard">
+        <div class="adcard-top">
+          <div>
+            <div class="adcard-name">${d.userName||'—'}</div>
+            <div class="adcard-sub">📦 ${d.levelName||'—'} · ${fmt(d.amount)} MT · ${(d.method||'').toUpperCase()}</div>
+            <div class="adcard-sub">🕐 ${new Date(d.date).toLocaleString('pt')}</div>
+          </div>
+          <span class="badge bp">🆕 Novo</span>
+        </div>
+        <div class="adcard-btns">
+          <button class="btn-approve" onclick="appDep('${d.id}')">✓ Aprovar</button>
+          <button class="btn-reject" onclick="rejDep('${d.id}')">✗ Rejeitar</button>
+        </div>
+      </div>
+    `).join('');
+  }
+}
+
+// ══ APROVAR DEPÓSITO ══
+async function appDep(id) {
+  await loadData();
+  const d = STATE.deposits.find(d=>d.id==id);
+  if(!d) return toast('Depósito não encontrado','err');
+  const now = Date.now();
+  d.status = 'approved'; d.approvedAt = now;
+  await setFB('deposits/'+d.id, d);
+
+  const u = STATE.users.find(u=>u.id===d.userId);
+  if(u) {
+    u.level = Number(d.levelId);
+    u.lastDailyPaid = now;
+    u.withdrawCount = 0;
+    await updFB('users/'+u.id, {level:u.level, lastDailyPaid:now, withdrawCount:0});
+
+    // Pagar comissão ao quem convidou (só no 1º depósito)
+    const prevDeps = STATE.deposits.filter(dep=>dep.userId===u.id&&dep.status==='approved'&&!dep.isReward&&!dep.isRef&&dep.id!=id);
+    if(prevDeps.length===0 && u.refCode) {
+      const refUser = STATE.users.find(r=>r.code===u.refCode);
+      if(refUser) {
+        refUser.balance = (refUser.balance||0) + REFERRAL_BONUS;
+        refUser.commission = (refUser.commission||0) + REFERRAL_BONUS;
+        refUser.totalEarned = (refUser.totalEarned||0) + REFERRAL_BONUS;
+        refUser.refEarnings = (refUser.refEarnings||0) + REFERRAL_BONUS;
+        await updFB('users/'+refUser.id, {
+          balance:refUser.balance, commission:refUser.commission,
+          totalEarned:refUser.totalEarned, refEarnings:refUser.refEarnings
+        });
+        await setFB('deposits/'+(now+1), {
+          id:now+1, userId:refUser.id, userName:refUser.name, userPhone:refUser.phone,
+          amount:REFERRAL_BONUS, method:'referral', status:'approved', date:now,
+          isReward:true, isRef:true, note:'Comissão referido: '+(u.name||'')
+        });
+        toast('Comissão 50 MT paga a '+refUser.name,'ok');
+      }
+    }
+  }
+  await loadData(); adStats(); renderContent();
+  toast('✓ '+(u?u.name:'')+'  — '+(d.levelName||'')+'  aprovado!', 'ok');
+}
+
+// ══ REJEITAR DEPÓSITO ══
+async function rejDep(id) {
+  if(!confirm('Rejeitar este depósito?')) return;
+  await loadData();
+  const d = STATE.deposits.find(d=>d.id==id);
+  if(!d) return;
+  d.status = 'rejected';
+  await setFB('deposits/'+d.id, d);
+  await loadData(); adStats(); renderContent();
+  toast('Depósito rejeitado','err');
+}
+
+// ══ APROVAR SAQUE ══
+async function appWth(id) {
+  await loadData();
+  const w = STATE.withdrawals.find(w=>w.id==id);
+  if(!w) return;
+  const u = STATE.users.find(u=>u.id===w.userId);
+  if(u) {
+    if(u.balance < w.amount) return toast('Saldo insuficiente!','err');
+    u.balance -= w.amount;
+    u.totalWithdrawn = (u.totalWithdrawn||0) + w.amount;
+    await updFB('users/'+u.id, {balance:u.balance, totalWithdrawn:u.totalWithdrawn});
+  }
+  w.status = 'approved';
+  await setFB('withdrawals/'+w.id, w);
+  await loadData(); adStats(); renderContent();
+  toast('✓ Saque '+fmt(w.amount)+' MT aprovado! Enviar para +258 '+(w.toPhone||''), 'ok');
+}
+
+// ══ REJEITAR SAQUE ══
+async function rejWth(id) {
+  if(!confirm('Rejeitar este saque?')) return;
+  await loadData();
+  const w = STATE.withdrawals.find(w=>w.id==id);
+  if(!w) return;
+  w.status = 'rejected';
+  await setFB('withdrawals/'+w.id, w);
+  // Libertar o utilizador para poder pedir saque outra vez
+  const u = STATE.users.find(u=>u.id===w.userId);
+  if(u) {
+    await updFB('users/'+u.id, {withdrawCount:0});
+  }
+  await loadData(); adStats(); renderContent();
+  toast('Saque rejeitado — utilizador pode pedir de novo','err');
+}
+
+function fmt(n){ return Number(n||0).toLocaleString('pt'); }
+
+// ══ INIT ══
+(async()=>{
+  // Check session
+  if(sessionStorage.getItem('adm_ok')==='1'){
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('admin-screen').style.display='block';
+    // Wait for Firebase
+    await new Promise(resolve=>{
+      const c=setInterval(()=>{if(window.firebaseDB){clearInterval(c);resolve();}},100);
+      setTimeout(()=>{clearInterval(c);resolve();},6000);
+    });
+    init();
+  }
+})();
+</script>
+</body>
+</html>
