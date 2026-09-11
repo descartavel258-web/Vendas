@@ -88,14 +88,14 @@ body{background:#0A0A0A;color:#E5E7EB;font-family:'Sora',sans-serif;font-size:14
 .ba{background:rgba(16,185,129,.15);color:#10B981}
 .br{background:rgba(239,68,68,.15);color:#EF4444}
 .adcard-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
-.adcard-btns-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
-.adcard-btns-1{display:grid;grid-template-columns:1fr;gap:8px;margin-top:10px}
-.btn-delete{background:rgba(107,114,128,.12);border:1px solid rgba(107,114,128,.35);color:#9CA3AF;border-radius:10px;padding:9px;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;transition:all .2s;width:100%}
-.btn-delete:hover{background:#374151;color:#FCA5A5;border-color:#EF4444}
 .btn-approve{background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.3);color:#10B981;border-radius:10px;padding:9px;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;transition:all .2s;width:100%}
 .btn-approve:hover{background:#10B981;color:#000}
 .btn-reject{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#EF4444;border-radius:10px;padding:9px;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;transition:all .2s;width:100%}
 .btn-reject:hover{background:#EF4444;color:#fff}
+.btn-delete{background:rgba(107,114,128,.12);border:1px solid rgba(107,114,128,.35);color:#9CA3AF;border-radius:10px;padding:9px;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;transition:all .2s;width:100%}
+.btn-delete:hover{background:#374151;color:#FCA5A5;border-color:#EF4444}
+.adcard-btns-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
+.adcard-btns-1{display:grid;grid-template-columns:1fr;gap:8px;margin-top:10px}
 .empty{text-align:center;padding:50px 20px;color:#4B5563;font-size:13px}
 .toast-wrap{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:999;pointer-events:none}
 .toast{background:#1F2937;border:1px solid #374151;border-radius:50px;padding:11px 22px;font-size:13px;font-weight:700;color:#E5E7EB;margin-bottom:8px;white-space:nowrap}
@@ -407,26 +407,10 @@ async function appDep(id) {
 
   const u = STATE.users.find(u=>u.id===d.userId);
   if(u) {
-    const lvApproved = LEVELS.find(l=>l.id===Number(d.levelId));
     u.level = Number(d.levelId);
     u.lastDailyPaid = now;
     u.withdrawCount = 0;
-    // Creditar 1º dia de rendimento imediatamente ao aprovar
-    const firstEarning = lvApproved ? lvApproved.daily : 0;
-    u.balance = (u.balance||0) + firstEarning;
-    u.totalEarned = (u.totalEarned||0) + firstEarning;
-    await updFB('users/'+u.id, {
-      level:u.level, lastDailyPaid:now, withdrawCount:0,
-      balance:u.balance, totalEarned:u.totalEarned
-    });
-    if(firstEarning > 0){
-      await setFB('deposits/'+(now+2), {
-        id:now+2, userId:u.id, userName:u.name, userPhone:u.phone,
-        amount:firstEarning, method:'reward', status:'approved',
-        date:now, isReward:true,
-        note:'Rendimento dia 1 — '+d.levelName+' (aprovação)'
-      });
-    }
+    await updFB('users/'+u.id, {level:u.level, lastDailyPaid:now, withdrawCount:0});
 
     // Pagar comissão ao quem convidou (só no 1º depósito)
     const prevDeps = STATE.deposits.filter(dep=>dep.userId===u.id&&dep.status==='approved'&&!dep.isReward&&!dep.isRef&&dep.id!=id);
