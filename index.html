@@ -4,18 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0D0D0D">
-<title>Admin — LUCRO PRIME</title>
+<title>Admin — FACIM</title>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getDatabase, ref, onValue, set, update, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
   const firebaseConfig = {
-    apiKey: "AIzaSyAr_naF8pZIumtpzDyU43sw9dzwvegWts0",
-    authDomain: "xitiquemz-e295c.firebaseapp.com",
-    databaseURL: "https://xitiquemz-e295c-default-rtdb.firebaseio.com",
-    projectId: "xitiquemz-e295c",
-    storageBucket: "xitiquemz-e295c.firebasestorage.app",
-    messagingSenderId: "822220496963",
-    appId: "1:822220496963:web:c3a7ded7143c25d51974f6"
+    apiKey: "AIzaSyC6YA0_qDwwHCl_ooJISiyhhqpHU656z-Y",
+    authDomain: "facim-96421.firebaseapp.com",
+    databaseURL: "https://facim-96421-default-rtdb.firebaseio.com",
+    projectId: "facim-96421",
+    storageBucket: "facim-96421.firebasestorage.app",
+    messagingSenderId: "720348681647",
+    appId: "1:720348681647:web:bd04d85bfc8685529c4b5a",
+    measurementId: "G-XCB5C2S0T4"
   };
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
@@ -39,22 +40,20 @@ body{background:#0A0A0A;color:#E5E7EB;font-family:'Sora',sans-serif;font-size:14
 #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;background:linear-gradient(135deg,#0D0D0D,#111827)}
 .login-box{background:#111;border:1px solid #222;border-radius:20px;padding:32px;width:100%;max-width:360px}
 .login-logo{text-align:center;margin-bottom:28px}
-.login-logo h1{font-size:22px;font-weight:800;color:#10B981;letter-spacing:-.5px}
+.login-logo h1{font-size:22px;font-weight:800;color:#FF6B00;letter-spacing:-.5px}
 .login-logo p{font-size:12px;color:#6B7280;margin-top:4px}
-.login-badge{display:inline-block;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:#10B981;border-radius:20px;padding:4px 14px;font-size:11px;font-weight:700;margin-bottom:16px}
+.login-badge{display:inline-block;background:rgba(255,107,0,.1);border:1px solid rgba(255,107,0,.3);color:#FF6B00;border-radius:20px;padding:4px 14px;font-size:11px;font-weight:700;margin-bottom:16px}
 .field{margin-bottom:14px}
 .field label{display:block;font-size:11px;font-weight:700;color:#9CA3AF;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em}
 .field input{width:100%;background:#0D0D0D;border:1.5px solid #222;color:#E5E7EB;border-radius:12px;padding:13px 16px;font-family:inherit;font-size:14px;outline:none;transition:border-color .2s}
-.field input:focus{border-color:#10B981}
-.btn-login{width:100%;padding:14px;background:linear-gradient(135deg,#059669,#10B981);border:none;border-radius:12px;color:#fff;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;transition:all .2s}
+.field input:focus{border-color:#FF6B00}
+.btn-login{width:100%;padding:14px;background:linear-gradient(135deg,#E55A00,#FF6B00);border:none;border-radius:12px;color:#fff;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;transition:all .2s}
 .btn-login:hover{opacity:.9;transform:translateY(-1px)}
-
-
 
 /* ADMIN */
 #admin-screen{display:none;min-height:100vh}
 .adh{background:linear-gradient(135deg,#111,#1F2937);border-bottom:1px solid #222;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
-.adh-left h1{font-size:18px;font-weight:800;color:#10B981}
+.adh-left h1{font-size:18px;font-weight:800;color:#FF6B00}
 .adh-left p{font-size:11px;color:#6B7280;margin-top:2px}
 .adh-right{display:flex;align-items:center;gap:10px}
 .live-dot{width:8px;height:8px;background:#10B981;border-radius:50%;animation:pulse 1.5s infinite}
@@ -74,7 +73,7 @@ body{background:#0A0A0A;color:#E5E7EB;font-family:'Sora',sans-serif;font-size:14
 /* TABS */
 .tabs{display:flex;gap:6px;padding:0 16px 12px;overflow-x:auto}
 .tab{background:#111;border:1px solid #1F2937;color:#9CA3AF;border-radius:20px;padding:8px 16px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s}
-.tab.active{background:#10B981;border-color:#10B981;color:#000}
+.tab.active{background:#FF6B00;border-color:#FF6B00;color:#000}
 
 /* CONTENT */
 .content{padding:0 16px 40px}
@@ -113,7 +112,7 @@ body{background:#0A0A0A;color:#E5E7EB;font-family:'Sora',sans-serif;font-size:14
 <div id="login-screen">
   <div class="login-box">
     <div class="login-logo">
-      <h1>LUCRO PRIME</h1>
+      <h1>FACIM</h1>
       <p>Painel de Administração</p>
     </div>
     <div style="text-align:center;margin-bottom:20px">
@@ -124,7 +123,6 @@ body{background:#0A0A0A;color:#E5E7EB;font-family:'Sora',sans-serif;font-size:14
       <input type="password" id="adm-pw" placeholder="••••••••" onkeydown="if(event.key==='Enter')doAdminLogin()">
     </div>
     <button class="btn-login" onclick="doAdminLogin()">Entrar como Admin</button>
-    
   </div>
 </div>
 
@@ -132,7 +130,7 @@ body{background:#0A0A0A;color:#E5E7EB;font-family:'Sora',sans-serif;font-size:14
 <div id="admin-screen">
   <div class="adh">
     <div class="adh-left">
-      <h1>⚡ Admin LUCRO PRIME</h1>
+      <h1>⚡ Admin FACIM</h1>
       <p id="ad-time">A carregar...</p>
     </div>
     <div class="adh-right">
@@ -249,7 +247,6 @@ function doLogout() {
 }
 
 async function init() {
-  // Update time
   setInterval(() => {
     const el = document.getElementById('ad-time');
     if(el) el.textContent = new Date().toLocaleString('pt');
@@ -348,7 +345,7 @@ function renderContent() {
 
   } else if(currentTab === 'users') {
     if(!STATE.users.length){el.innerHTML='<div class="empty">Sem utilizadores</div>';return;}
-    el.innerHTML = STATE.users.sort((a,b)=>b.joinTs-a.joinTs).map(u=>{
+    el.innerHTML = STATE.users.sort((a,b)=>(b.joinTs||0)-(a.joinTs||0)).map(u=>{
       const lv = LEVELS.find(l=>l.id==u.level);
       const depBase = STATE.deposits.filter(d=>d.userId===u.id&&d.status==='approved'&&!d.isReward&&!d.isRef).sort((a,b)=>a.date-b.date)[0];
       const daysLeft = depBase&&lv ? Math.max(0,Math.ceil(((depBase.approvedAt+(lv.durationDays*86400000))-Date.now())/86400000)) : null;
@@ -356,8 +353,8 @@ function renderContent() {
       return `<div class="adcard">
         <div class="adcard-top">
           <div>
-            <div class="adcard-name">${u.name}</div>
-            <div class="adcard-sub">📱 +258 ${u.phone} · 🔑 ${u.code||'—'}</div>
+            <div class="adcard-name">${u.name||'—'}</div>
+            <div class="adcard-sub">📱 +258 ${u.phone||'—'} · 🔑 ${u.code||'—'}</div>
             <div class="adcard-sub">⭐ ${lv?lv.name:'Sem VIP'} · 👥 ${u.refs||0} refs · 💸 ${u.withdrawCount||0}/1 saque</div>
             <div class="adcard-sub">📅 Entrou: ${u.joinDate||'—'}${daysLeft!==null?' · '+daysLeft+'d restantes':''}</div>
           </div>
@@ -501,7 +498,6 @@ async function delWth(id) {
   await loadData();
   const w = STATE.withdrawals.find(w=>w.id==id);
   if(!w) return toast('Saque não encontrado','err');
-  // Se estava pendente, libertar o utilizador
   if(w.status==='pending') {
     const u = STATE.users.find(u=>u.id===w.userId);
     if(u) await updFB('users/'+u.id, {withdrawCount:0});
@@ -516,17 +512,14 @@ async function delUser(id) {
   await loadData();
   const u = STATE.users.find(u=>u.id==id);
   if(!u) return toast('Utilizador não encontrado','err');
-  // Apagar depósitos do user
   const userDeps = STATE.deposits.filter(d=>d.userId==id);
   for(const d of userDeps) {
     await setFB('deposits/'+d.id, null);
   }
-  // Apagar saques do user
   const userWths = STATE.withdrawals.filter(w=>w.userId==id);
   for(const w of userWths) {
     await setFB('withdrawals/'+w.id, null);
   }
-  // Apagar o user
   await setFB('users/'+u.id, null);
   await loadData(); adStats(); renderContent();
   toast('Utilizador e dados associados apagados','ok');
@@ -536,11 +529,9 @@ function fmt(n){ return Number(n||0).toLocaleString('pt'); }
 
 // ══ INIT ══
 (async()=>{
-  // Check session
   if(sessionStorage.getItem('adm_ok')==='1'){
     document.getElementById('login-screen').style.display='none';
     document.getElementById('admin-screen').style.display='block';
-    // Wait for Firebase
     await new Promise(resolve=>{
       const c=setInterval(()=>{if(window.firebaseDB){clearInterval(c);resolve();}},100);
       setTimeout(()=>{clearInterval(c);resolve();},6000);
