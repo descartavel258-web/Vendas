@@ -347,7 +347,7 @@ function renderContent() {
     if(!STATE.users.length){el.innerHTML='<div class="empty">Sem utilizadores</div>';return;}
     el.innerHTML = STATE.users.sort((a,b)=>(b.joinTs||0)-(a.joinTs||0)).map(u=>{
       const lv = LEVELS.find(l=>l.id==u.level);
-      const depBase = STATE.deposits.filter(d=>d.userId===u.id&&d.status==='approved'&&!d.isReward&&!d.isRef).sort((a,b)=>a.date-b.date)[0];
+      const depBase = STATE.deposits.filter(d=>String(d.userId)===String(u.id)&&d.status==='approved'&&!d.isReward&&!d.isRef).sort((a,b)=>a.date-b.date)[0];
       const daysLeft = depBase&&lv ? Math.max(0,Math.ceil(((depBase.approvedAt+(lv.durationDays*86400000))-Date.now())/86400000)) : null;
       const canWithdraw = daysLeft===0 && (u.withdrawCount||0)<1;
       return `<div class="adcard">
@@ -394,55 +394,94 @@ function renderContent() {
 }
 
 // ══ APROVAR DEPÓSITO ══
+// Ao aprovar: saldo = valor do depósito (ex: 350 MT).
+// Após 24h a app FACIM adiciona o rendimento diário (ex: +70 → 420).
 async function appDep(id) {
   await loadData();
-  const d = STATE.deposits.find(d=>d.id==id);
+  const d = STATE.deposits.find(x => String(x.id) === String(id));
   if(!d) return toast('Depósito não encontrado','err');
+  if(d.status === 'approved') return toast('Já está aprovado','err');
+
   const now = Date.now();
-  d.status = 'approved'; d.approvedAt = now;
-  await setFB('deposits/'+d.id, d);
+  d.status = 'approved';
+  d.approvedAt = now;
+  await setFB('deposits/' + d.id, d);
 
-  const u = STATE.users.find(u=>u.id===d.userId);
-  if(u) {
-    u.level = Number(d.levelId);
-    u.lastDailyPaid = now;
-    u.withdrawCount = 0;
-    await updFB('users/'+u.id, {level:u.level, lastDailyPaid:now, withdrawCount:0});
+  const u = STATE.users.find(x => String(x.id) === String(d.userId));
+  if(!u) {
+    await loadData(); adStats(); renderContent();
+    return toast('Depósito aprovado, mas utilizador não encontrado','err');
+  }
 
-    // Pagar comissão ao quem convidou (só no 1º depósito)
-    const prevDeps = STATE.deposits.filter(dep=>dep.userId===u.id&&dep.status==='approved'&&!dep.isReward&&!dep.isRef&&dep.id!=id);
-    if(prevDeps.length===0 && u.refCode) {
-      const refUser = STATE.users.find(r=>r.code===u.refCode);
-      if(refUser) {
-        refUser.balance = (refUser.balance||0) + REFERRAL_BONUS;
-        refUser.commission = (refUser.commission||0) + REFERRAL_BONUS;
-        refUser.totalEarned = (refUser.totalEarned||0) + REFERRAL_BONUS;
-        refUser.refEarnings = (refUser.refEarnings||0) + REFERRAL_BONUS;
-        await updFB('users/'+refUser.id, {
-          balance:refUser.balance, commission:refUser.commission,
-          totalEarned:refUser.totalEarned, refEarnings:refUser.refEarnings
-        });
-        await setFB('deposits/'+(now+1), {
-          id:now+1, userId:refUser.id, userName:refUser.name, userPhone:refUser.phone,
-          amount:REFERRAL_BONUS, method:'referral', status:'approved', date:now,
-          isReward:true, isRef:true, note:'Comissão referido: '+(u.name||'')
-        });
-        toast('Comissão 50 MT paga a '+refUser.name,'ok');
-      }
+  const depositAmt = Number(d.amount) || 0;
+
+  // Activar VIP + creditar o valor do depósito no saldo
+  // lastDailyPaid = now → o 1º rendimento (+daily) só entra após 24h na app FACIM
+  u.level = Number(d.levelId);
+  u.lastDailyPaid = now;
+  u.withdrawCount = 0;
+  u.balance = (u.balance || 0) + depositAmt;
+  u.totalEarned = (u.totalEarned || 0) + depositAmt;
+
+  await updFB('users/' + u.id, {
+    level: u.level,
+    lastDailyPaid: now,
+    withdrawCount: 0,
+    balance: u.balance,
+    totalEarned: u.totalEarned
+  });
+
+  // Comissão ao referenciador (só no 1º depósito aprovado)
+  const prevDeps = STATE.deposits.filter(dep =>
+    String(dep.userId) === String(u.id) &&
+    dep.status === 'approved' &&
+    !dep.isReward && !dep.isRef &&
+    String(dep.id) !== String(id)
+  );
+  if(prevDeps.length === 0 && u.refCode) {
+    const refUser = STATE.users.find(r => r.code === u.refCode);
+    if(refUser) {
+      refUser.balance = (refUser.balance || 0) + REFERRAL_BONUS;
+      refUser.commission = (refUser.commission || 0) + REFERRAL_BONUS;
+      refUser.totalEarned = (refUser.totalEarned || 0) + REFERRAL_BONUS;
+      refUser.refEarnings = (refUser.refEarnings || 0) + REFERRAL_BONUS;
+      await updFB('users/' + refUser.id, {
+        balance: refUser.balance,
+        commission: refUser.commission,
+        totalEarned: refUser.totalEarned,
+        refEarnings: refUser.refEarnings
+      });
+      await setFB('deposits/' + (now + 1), {
+        id: now + 1,
+        userId: refUser.id,
+        userName: refUser.name,
+        userPhone: refUser.phone,
+        amount: REFERRAL_BONUS,
+        method: 'referral',
+        status: 'approved',
+        date: now,
+        isReward: true,
+        isRef: true,
+        note: 'Comissão referido: ' + (u.name || '')
+      });
+      toast('Comissão 50 MT paga a ' + refUser.name, 'ok');
     }
   }
-  await loadData(); adStats(); renderContent();
-  toast('✓ '+(u?u.name:'')+'  — '+(d.levelName||'')+'  aprovado!', 'ok');
+
+  await loadData();
+  adStats();
+  renderContent();
+  toast('✓ ' + (u.name || '') + ' — ' + (d.levelName || '') + ' aprovado! +' + fmt(depositAmt) + ' MT no saldo', 'ok');
 }
 
 // ══ REJEITAR DEPÓSITO ══
 async function rejDep(id) {
   if(!confirm('Rejeitar este depósito?')) return;
   await loadData();
-  const d = STATE.deposits.find(d=>d.id==id);
+  const d = STATE.deposits.find(x => String(x.id) === String(id));
   if(!d) return;
   d.status = 'rejected';
-  await setFB('deposits/'+d.id, d);
+  await setFB('deposits/' + d.id, d);
   await loadData(); adStats(); renderContent();
   toast('Depósito rejeitado','err');
 }
@@ -450,33 +489,32 @@ async function rejDep(id) {
 // ══ APROVAR SAQUE ══
 async function appWth(id) {
   await loadData();
-  const w = STATE.withdrawals.find(w=>w.id==id);
-  if(!w) return;
-  const u = STATE.users.find(u=>u.id===w.userId);
+  const w = STATE.withdrawals.find(x => String(x.id) === String(id));
+  if(!w) return toast('Saque não encontrado','err');
+  const u = STATE.users.find(x => String(x.id) === String(w.userId));
   if(u) {
-    if(u.balance < w.amount) return toast('Saldo insuficiente!','err');
-    u.balance -= w.amount;
-    u.totalWithdrawn = (u.totalWithdrawn||0) + w.amount;
-    await updFB('users/'+u.id, {balance:u.balance, totalWithdrawn:u.totalWithdrawn});
+    if((u.balance || 0) < w.amount) return toast('Saldo insuficiente!','err');
+    u.balance = (u.balance || 0) - w.amount;
+    u.totalWithdrawn = (u.totalWithdrawn || 0) + w.amount;
+    await updFB('users/' + u.id, {balance: u.balance, totalWithdrawn: u.totalWithdrawn});
   }
   w.status = 'approved';
-  await setFB('withdrawals/'+w.id, w);
+  await setFB('withdrawals/' + w.id, w);
   await loadData(); adStats(); renderContent();
-  toast('✓ Saque '+fmt(w.amount)+' MT aprovado! Enviar para +258 '+(w.toPhone||''), 'ok');
+  toast('✓ Saque ' + fmt(w.amount) + ' MT aprovado! Enviar para +258 ' + (w.toPhone || ''), 'ok');
 }
 
 // ══ REJEITAR SAQUE ══
 async function rejWth(id) {
   if(!confirm('Rejeitar este saque?')) return;
   await loadData();
-  const w = STATE.withdrawals.find(w=>w.id==id);
+  const w = STATE.withdrawals.find(x => String(x.id) === String(id));
   if(!w) return;
   w.status = 'rejected';
-  await setFB('withdrawals/'+w.id, w);
-  // Libertar o utilizador para poder pedir saque outra vez
-  const u = STATE.users.find(u=>u.id===w.userId);
+  await setFB('withdrawals/' + w.id, w);
+  const u = STATE.users.find(x => String(x.id) === String(w.userId));
   if(u) {
-    await updFB('users/'+u.id, {withdrawCount:0});
+    await updFB('users/' + u.id, {withdrawCount: 0});
   }
   await loadData(); adStats(); renderContent();
   toast('Saque rejeitado — utilizador pode pedir de novo','err');
@@ -486,9 +524,9 @@ async function rejWth(id) {
 async function delDep(id) {
   if(!confirm('Apagar este depósito permanentemente?')) return;
   await loadData();
-  const d = STATE.deposits.find(d=>d.id==id);
+  const d = STATE.deposits.find(x => String(x.id) === String(id));
   if(!d) return toast('Depósito não encontrado','err');
-  await setFB('deposits/'+d.id, null);
+  await setFB('deposits/' + d.id, null);
   await loadData(); adStats(); renderContent();
   toast('Depósito apagado','ok');
 }
@@ -496,13 +534,13 @@ async function delDep(id) {
 async function delWth(id) {
   if(!confirm('Apagar este saque permanentemente?')) return;
   await loadData();
-  const w = STATE.withdrawals.find(w=>w.id==id);
+  const w = STATE.withdrawals.find(x => String(x.id) === String(id));
   if(!w) return toast('Saque não encontrado','err');
-  if(w.status==='pending') {
-    const u = STATE.users.find(u=>u.id===w.userId);
-    if(u) await updFB('users/'+u.id, {withdrawCount:0});
+  if(w.status === 'pending') {
+    const u = STATE.users.find(x => String(x.id) === String(w.userId));
+    if(u) await updFB('users/' + u.id, {withdrawCount: 0});
   }
-  await setFB('withdrawals/'+w.id, null);
+  await setFB('withdrawals/' + w.id, null);
   await loadData(); adStats(); renderContent();
   toast('Saque apagado','ok');
 }
@@ -510,17 +548,17 @@ async function delWth(id) {
 async function delUser(id) {
   if(!confirm('Apagar este utilizador e todos os seus depósitos/saques? Esta acção não pode ser desfeita.')) return;
   await loadData();
-  const u = STATE.users.find(u=>u.id==id);
+  const u = STATE.users.find(x => String(x.id) === String(id));
   if(!u) return toast('Utilizador não encontrado','err');
-  const userDeps = STATE.deposits.filter(d=>d.userId==id);
+  const userDeps = STATE.deposits.filter(d => String(d.userId) === String(id));
   for(const d of userDeps) {
-    await setFB('deposits/'+d.id, null);
+    await setFB('deposits/' + d.id, null);
   }
-  const userWths = STATE.withdrawals.filter(w=>w.userId==id);
+  const userWths = STATE.withdrawals.filter(w => String(w.userId) === String(id));
   for(const w of userWths) {
-    await setFB('withdrawals/'+w.id, null);
+    await setFB('withdrawals/' + w.id, null);
   }
-  await setFB('users/'+u.id, null);
+  await setFB('users/' + u.id, null);
   await loadData(); adStats(); renderContent();
   toast('Utilizador e dados associados apagados','ok');
 }
